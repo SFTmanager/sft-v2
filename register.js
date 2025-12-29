@@ -35,5 +35,4 @@ document.getElementById('btn-do-register').onclick = async () => {
         alert("Успех! Твой ID: " + genId);
         window.location.href = 'main.html';
     } catch (e) { alert("Этот ник уже занят или ошибка системы"); }
-
 };
