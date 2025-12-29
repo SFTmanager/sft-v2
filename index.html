@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>SFT</title>
+    <style>
+        body { background: #0f0f0f; color: #e0e0e0; font-family: 'Segoe UI', sans-serif; display: flex; justify-content: center; margin: 0; padding: 10px; box-sizing: border-box; }
+        .card { width: 100%; max-width: 400px; background: #1a1a1a; padding: 20px; border-radius: 24px; box-shadow: 0 15px 35px rgba(0,0,0,0.7); text-align: center; border: 1px solid #2a2a2a; }
+        
+        input { width: 100%; padding: 14px; margin: 8px 0; border-radius: 12px; border: 1px solid #333; background: #222; color: white; box-sizing: border-box; outline: none; font-size: 16px; }
+        input:focus { border-color: #4CAF50; }
+        
+        button { width: 100%; padding: 14px; border: none; border-radius: 12px; cursor: pointer; font-weight: bold; margin-top: 10px; font-size: 16px; }
+        .btn-primary { background: #4CAF50; color: white; }
+        .btn-secondary { background: transparent; color: #666; text-decoration: underline; font-size: 13px; }
+        
+        .hidden { display: none !important; }
+        
+        .coins-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin: 15px 0; }
+        .coin-item { background: #222; padding: 10px; border-radius: 14px; border: 1px solid #2a2a2a; text-align: left; }
+        .coin-name { font-size: 10px; color: #888; display: block; text-transform: uppercase; }
+        .coin-val { font-size: 15px; font-weight: bold; color: #fff; }
+
+        .main-balance { background: linear-gradient(135deg, #1e1e1e, #111); padding: 20px; border-radius: 20px; margin-bottom: 15px; border: 1px solid #333; }
+        .javs-val { font-size: 2.5em; color: #4CAF50; font-weight: 800; display: block; }
+        
+        .transfer-section { background: #222; padding: 15px; border-radius: 18px; margin-top: 15px; border: 1px solid #333; }
+    </style>
+</head>
+<body>
+
+<div class="card">
+    <div id="screen-login">
+        <h2 style="color: #4CAF50">SFT V2 Login</h2>
+        <input type="text" id="login-nick" placeholder="Никнейм">
+        <input type="password" id="login-pass" placeholder="Пароль">
+        <button class="btn-primary" id="btn-do-login">ВОЙТИ</button>
+        <button class="btn-secondary" id="go-to-reg">Регистрация</button>
+    </div>
+
+    <div id="screen-register" class="hidden">
+        <h2>Новый аккаунт</h2>
+        <input type="text" id="reg-nick" placeholder="Никнейм">
+        <input type="password" id="reg-pass" placeholder="Пароль">
+        <button class="btn-primary" id="btn-do-register">СОЗДАТЬ</button>
+        <button class="btn-secondary" id="go-to-login">Назад</button>
+    </div>
+
+    <div id="screen-main" class="hidden">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+            <span id="view-nick" style="font-weight: bold; color: #4CAF50">---</span>
+            <span style="color:#666; font-family: monospace;">#<span id="view-id">00000</span></span>
+        </div>
+
+        <div class="main-balance">
+            <span style="font-size: 0.7em; color: #888; letter-spacing: 2px;">JAVS</span>
+            <span class="javs-val" id="view-javs">0</span>
+        </div>
+
+        <div class="coins-grid">
+            <div class="coin-item"><span class="coin-name">BlackCoins</span><span class="coin-val" id="v-black">0</span></div>
+            <div class="coin-item"><span class="coin-name">WhiteCoins</span><span class="coin-val" id="v-white">0</span></div>
+            <div class="coin-item"><span class="coin-name">GreenCoins</span><span class="coin-val" id="v-green">0</span></div>
+            <div class="coin-item"><span class="coin-name">RedCoins</span><span class="coin-val" id="v-red">0</span></div>
+            <div class="coin-item"><span class="coin-name">BlueCoins</span><span class="coin-val" id="v-blue">0</span></div>
+        </div>
+
+        <div class="transfer-section">
+            <input type="text" id="send-to-id" placeholder="ID получателя">
+            <input type="number" id="send-amount" placeholder="Сумма JAVS">
+            <button class="btn-primary" id="btn-transfer" style="background:#2196F3">ОТПРАВИТЬ</button>
+        </div>
+
+        <button class="btn-secondary" id="btn-logout" style="margin-top:15px">Выйти</button>
+    </div>
+</div>
+
+<script type="module" src="script.js"></script>
+</body>
+</html>
