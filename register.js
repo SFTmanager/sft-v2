@@ -28,11 +28,12 @@ document.getElementById('btn-do-register').onclick = async () => {
         await setDoc(doc(db, "users", genId), {
             nickname: nick,
             id: genId,
-            javs: 100,
+            javs: 500,
             uid: res.user.uid,
             blackcoins: 0, whitecoins: 0, greencoins: 0, redcoins: 0, bluecoins: 0
         });
         alert("Успех! Твой ID: " + genId);
         window.location.href = 'main.html';
     } catch (e) { alert("Этот ник уже занят или ошибка системы"); }
+
 };
