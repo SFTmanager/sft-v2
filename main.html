@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SFT V2 - Кошелек</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="card">
+        <div style="display: flex; justify-content: space-between;">
+            <b id="view-nick">...</b>
+            <span style="color:#666">#<span id="view-id">00000</span></span>
+        </div>
+        <div class="main-balance">
+            <h1 id="view-javs">0</h1>
+            <p>JAVS</p>
+        </div>
+        <div class="coins-grid">
+            <div>Black: <span id="v-black">0</span></div>
+            <div>White: <span id="v-white">0</span></div>
+            <div>Green: <span id="v-green">0</span></div>
+            <div>Red: <span id="v-red">0</span></div>
+            <div>Blue: <span id="v-blue">0</span></div>
+        </div>
+        <div class="transfer-section">
+            <input type="text" id="send-to-id" placeholder="ID получателя">
+            <input type="number" id="send-amount" placeholder="Сумма JAVS">
+            <button id="btn-transfer" style="background:#2196F3; color:white">ОТПРАВИТЬ</button>
+        </div>
+        <button id="btn-logout" class="btn-secondary">Выйти</button>
+    </div>
+    <script type="module" src="main.js"></script>
+</body>
+</html>
