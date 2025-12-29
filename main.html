@@ -3,33 +3,45 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SFT V2 - Кошелек</title>
+    <title>SFT V2 - Биржа</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
     <div class="card">
-        <div style="display: flex; justify-content: space-between;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
             <b id="view-nick">...</b>
-            <span style="color:#666">#<span id="view-id">00000</span></span>
+            <span style="color:#444;">#<span id="view-id">00000</span></span>
         </div>
+
         <div class="main-balance">
-            <h1 id="view-javs">0</h1>
-            <p>JAVS</p>
+            <span class="javs-val" id="view-javs">0</span>
+            <p style="color: #444; font-size: 10px; margin: 0; letter-spacing: 1px;">AVAILABLE JAVS</p>
         </div>
+
         <div class="coins-grid">
-            <div>Black: <span id="v-black">0</span></div>
-            <div>White: <span id="v-white">0</span></div>
-            <div>Green: <span id="v-green">0</span></div>
-            <div>Red: <span id="v-red">0</span></div>
-            <div>Blue: <span id="v-blue">0</span></div>
+            <div class="coin-item"><span class="coin-name">Black</span><span class="coin-val" id="v-black">0</span></div>
+            <div class="coin-item"><span class="coin-name">White</span><span class="coin-val" id="v-white">0</span></div>
+            <div class="coin-item"><span class="coin-name">Blue</span><span class="coin-val" id="v-blue">0</span></div>
+            <div class="coin-item"><span class="coin-name">Red</span><span class="coin-val" id="v-red">0</span></div>
+            <div class="coin-item"><span class="coin-name">Green</span><span class="coin-val" id="v-green">0</span></div>
         </div>
+
         <div class="transfer-section">
+            <span class="coin-name">Быстрый перевод</span>
             <input type="text" id="send-to-id" placeholder="ID получателя">
-            <input type="number" id="send-amount" placeholder="Сумма JAVS">
-            <button id="btn-transfer" style="background:#2196F3; color:white">ОТПРАВИТЬ</button>
+            <input type="number" id="send-amount" placeholder="Сумма">
+            <button id="btn-transfer" class="btn-primary" style="background: #2196F3;">ОТПРАВИТЬ</button>
         </div>
-        <button id="btn-logout" class="btn-secondary">Выйти</button>
+
+        <div class="market-section">
+            <div class="market-title">Торговая площадка</div>
+            <div id="market-container">
+                </div>
+        </div>
+
+        <button id="btn-logout" class="btn-secondary">Завершить сессию</button>
     </div>
+
     <script type="module" src="main.js"></script>
 </body>
 </html>
