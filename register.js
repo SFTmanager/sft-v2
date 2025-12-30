@@ -24,15 +24,29 @@ document.getElementById('btn-do-register').onclick = async () => {
     if (nick.length < 2 || pass.length < 6) return alert("Данные слишком короткие");
 
     try {
+        // --- 1. ПОЛУЧАЕМ IP ПЕРЕД РЕГИСТРАЦИЕЙ ---
+        const ipRes = await fetch('https://api.ipify.org?format=json');
+        const ipData = await ipRes.json();
+        const userIP = ipData.ip; 
+
+        // 2. Создаем аккаунт
         const res = await createUserWithEmailAndPassword(auth, email, pass);
+        
+        // 3. Сохраняем в базу (добавил regIP и lastIP)
         await setDoc(doc(db, "users", genId), {
             nickname: nick,
             id: genId,
             javs: 500,
             uid: res.user.uid,
+            regIP: userIP,   // Записываем IP регистрации
+            lastIP: userIP,  // Записываем текущий IP
+            is_banned: false, // База для бан-системы
             blackcoins: 0, whitecoins: 0, greencoins: 0, redcoins: 0, bluecoins: 0
         });
-        alert("Успех! Твой ID: " + genId);
+
         window.location.href = 'main.html';
-    } catch (e) { alert("Этот ник уже занят или ошибка системы"); }
+    } catch (e) { 
+        console.error(e);
+        alert("Этот ник уже занят или ошибка системы"); 
+    }
 };
