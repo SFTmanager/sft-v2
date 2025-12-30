@@ -1,6 +1,7 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
 import { getAuth, createUserWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
-import { getFirestore, doc, setDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+// ИСПРАВЛЕНО: Добавлены addDoc, collection, serverTimestamp
+import { getFirestore, doc, setDoc, addDoc, collection, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
 const firebaseConfig = {
     apiKey: "AIzaSyCB6U9js8IMNaQm3cGpR9W-KfJTLVVS85A",
@@ -15,6 +16,17 @@ const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
 
+async function logAction(userId, type, message) {
+    try {
+        await addDoc(collection(db, "config", "log", "entries"), {
+            userId: userId,
+            type: type,
+            msg: message,
+            time: serverTimestamp()
+        });
+    } catch (e) { console.error("Ошибка лога:", e); }
+}
+
 document.getElementById('btn-do-register').onclick = async () => {
     const nick = document.getElementById('reg-nick').value.trim();
     const pass = document.getElementById('reg-pass').value;
@@ -24,29 +36,27 @@ document.getElementById('btn-do-register').onclick = async () => {
     if (nick.length < 2 || pass.length < 6) return alert("Данные слишком короткие");
 
     try {
-        // --- 1. ПОЛУЧАЕМ IP ПЕРЕД РЕГИСТРАЦИЕЙ ---
         const ipRes = await fetch('https://api.ipify.org?format=json');
         const ipData = await ipRes.json();
         const userIP = ipData.ip; 
 
-        // 2. Создаем аккаунт
         const res = await createUserWithEmailAndPassword(auth, email, pass);
         
-        // 3. Сохраняем в базу (добавил regIP и lastIP)
         await setDoc(doc(db, "users", genId), {
             nickname: nick,
             id: genId,
             javs: 500,
             uid: res.user.uid,
-            regIP: userIP,   // Записываем IP регистрации
-            lastIP: userIP,  // Записываем текущий IP
-            is_banned: false, // База для бан-системы
+            regIP: userIP,
+            lastIP: userIP,
+            is_banned: false,
             blackcoins: 0, whitecoins: 0, greencoins: 0, redcoins: 0, bluecoins: 0
         });
 
+        await logAction(genId, "REGISTRATION", `Новый игрок. IP: ${userIP}`);
         window.location.href = 'main.html';
     } catch (e) { 
         console.error(e);
-        alert("Этот ник уже занят или ошибка системы"); 
+        alert("Ошибка регистрации. Возможно, ник занят."); 
     }
 };
