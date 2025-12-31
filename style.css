@@ -1,7 +1,38 @@
-body { background: #0f0f0f; color: #e0e0e0; font-family: 'Segoe UI', sans-serif; display: flex; justify-content: center; margin: 0; padding: 10px; box-sizing: border-box; }
-.card { width: 100%; max-width: 400px; background: #1a1a1a; padding: 20px; border-radius: 24px; box-shadow: 0 15px 35px rgba(0,0,0,0.7); text-align: center; border: 1px solid #2a2a2a; }
+body { 
+    background: #0f0f0f; 
+    color: #e0e0e0; 
+    font-family: 'Segoe UI', sans-serif; 
+    display: flex; 
+    justify-content: center; 
+    margin: 0; 
+    padding: 10px; 
+    box-sizing: border-box; 
+}
 
-input { width: 100%; padding: 14px; margin: 8px 0; border-radius: 12px; border: 1px solid #333; background: #222; color: white; box-sizing: border-box; outline: none; font-size: 16px; }
+.card { 
+    width: 100%; 
+    max-width: 
+    400px; 
+    background: #1a1a1a; 
+    padding: 20px; 
+    border-radius: 24px; 
+    box-shadow: 0 15px 35px rgba(0,0,0,0.7); 
+    text-align: center; 
+    border: 1px solid #2a2a2a; 
+}
+
+input { 
+    width: 100%; 
+    padding: 14px; 
+    margin: 8px 0; 
+    border-radius: 12px; 
+    border: 1px solid #333; 
+    background: #222; 
+    color: white; 
+    box-sizing: border-box; 
+    outline: none; 
+    font-size: 16px; 
+}
 input:focus { border-color: #4CAF50; }
 
 button { width: 100%; padding: 14px; border: none; border-radius: 12px; cursor: pointer; font-weight: bold; margin-top: 10px; font-size: 16px; transition: 0.2s; }
@@ -41,7 +72,8 @@ button:active { transform: scale(0.98); }
 .c-blue { color: #2196F3; }
 .c-red { color: #f44336; }
 .c-green { color: #4CAF50; opacity: 0.5; }
-
+.c-gray {color: #333333}
+.c-light-gray {color: #444}
 /* Фон за окном */
 .modal-overlay {
     position: fixed;
@@ -69,4 +101,13 @@ button:active { transform: scale(0.98); }
     position: absolute;
     top: 15px; right: 20px;
     font-size: 28px; color: #666; cursor: pointer;
+}
+
+.else{
+    background: #222; 
+    padding: 15px; 
+    border-radius: 18px; 
+    margin-top: 25px; 
+    border: 1px solid #333; 
+    text-align: center;
 }

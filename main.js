@@ -7,6 +7,8 @@ import {
     collection, 
     query, 
     where, 
+    orderBy, // Добавлено
+    limit,   // Добавлено
     getDocs, 
     getDoc, 
     runTransaction, 
@@ -106,7 +108,7 @@ onAuthStateChanged(auth, async (user) => {
                     if (el) el.innerText = d[id] || 0;
                 });
             }, (err) => console.error("Ошибка Snapshot юзера:", err));
-
+            initLeaderboard();
         } else {
             console.error("Документ пользователя не найден в Firestore.");
         }
@@ -128,7 +130,9 @@ onSnapshot(collection(db, "currencies"), (snap) => {
         const coin = dataMap[id];
         if (!coin) return;
         
-        const available = coin.max - (coin.total || 0);
+        const total = coin.total || 0;
+        const max = coin.max || 0;
+        const available = max - total;
         const shortName = id.replace('coins', '');
         
         const card = document.createElement('div');
@@ -138,12 +142,19 @@ onSnapshot(collection(db, "currencies"), (snap) => {
                 <b class="c-${shortName}">${id.toUpperCase()}</b>
                 <span style="font-size: 14px; color: #4CAF50;">${coin.cost} J</span>
             </div>
+
             <div class="slider-container">
                 <input type="range" class="coin-slider" id="sl-${id}" 
                     min="1" max="${available > 0 ? Math.min(available, 100) : 1}" 
                     value="1" oninput="document.getElementById('val-${id}').innerText = this.value">
                 <span class="slider-val" id="val-${id}">1</span>
             </div>
+
+            <div style="display: flex; justify-content: space-between; padding: 0 10px; margin-bottom: 10px; font-size: 11px; font-family: monospace;">
+                <span style="color: #444444;">СУММАРНО: <b style="color: #eee;">${total}</b></span>
+                <span style="color: #444444;">МАКС: <b style="color: #eee;">${max}</b></span>
+            </div>
+
             <div class="trade-btns">
                 <button class="btn-buy-coin" onclick="trade('${id}', 'buy')" ${available <= 0 ? 'disabled' : ''}>КУПИТЬ</button>
                 <button class="btn-sell-coin" onclick="trade('${id}', 'sell')">ПРОДАТЬ</button>
@@ -152,7 +163,6 @@ onSnapshot(collection(db, "currencies"), (snap) => {
         container.appendChild(card);
     });
 }, (err) => console.error("Ошибка Snapshot рынка:", err));
-
 // --- ТОРГОВЛЯ ---
 async function trade(coinId, type) {
     const myId = document.getElementById('view-id').innerText;
@@ -261,6 +271,8 @@ if (btnSubmitPromo) {
 
         try {
             const promoRef = doc(db, "promo", code);
+            let awardsSummary = ""; // Переменная для хранения текста наград
+
             await runTransaction(db, async (t) => {
                 const pS = await t.get(promoRef);
                 const userRef = doc(db, "users", myId);
@@ -272,16 +284,25 @@ if (btnSubmitPromo) {
                 if (p.used_by && p.used_by.includes(myId)) throw "Вы уже активировали этот код!";
                 
                 const updates = {};
+                const awardsArray = []; // Массив для красивого текста
+
                 for (const key in p.awards) { 
-                    updates[key] = (uS.data()[key] || 0) + p.awards[key]; 
+                    const amount = p.awards[key];
+                    updates[key] = (uS.data()[key] || 0) + amount; 
+                    awardsArray.push(`${amount} ${key}`); // Собираем "500 javs", "10 blackcoins" и т.д.
                 }
                 
+                awardsSummary = awardsArray.join(", "); // Соединяем через запятую
+
                 t.update(userRef, updates);
                 t.update(promoRef, { used_by: [...(p.used_by || []), myId] });
             });
 
-            await logAction(myId, "PROMO", `Активировал код: ${code}`);
-            alert("Промокод успешно активирован!");
+            await logAction(myId, "PROMO", `Активировал код: ${code}. Награды: ${awardsSummary}`);
+            
+            // Выводим уведомление с перечислением наград
+            alert(`Промокод успешно активирован! Награды: ${awardsSummary}`);
+            
             pModal.style.display = 'none';
         } catch (e) { 
             alert(e); 
@@ -297,4 +318,35 @@ if (btnLogout) {
             window.location.href = 'login.html';
         });
     };
+}
+
+// Функция для отображения таблицы лидеров
+function initLeaderboard() {
+    const leaderboardList = document.getElementById('leaderboard-list');
+    if (!leaderboardList) return;
+
+    // Запрос: тянем топ-10 богачей по JAVS
+    const q = query(
+        collection(db, "users"), 
+        orderBy("javs", "desc"), 
+        limit(10)
+    );
+
+    onSnapshot(q, (snap) => {
+        leaderboardList.innerHTML = '';
+        let rank = 1;
+
+        snap.forEach(doc => {
+            const d = doc.data();
+            const item = document.createElement('div');
+            item.className = 'leader-item';
+            // Выделяем топ-3 золотом/серебром
+            const medal = rank === 1 ? '🥇' : rank === 2 ? '🥈' : rank === 3 ? '🥉' : `#${rank}`;
+            
+            item.innerHTML = `
+                <span><h2>${medal} <b>${d.nickname}: ${Math.floor(d.javs)} J</h2></b></span>`;
+            leaderboardList.appendChild(item);
+            rank++;
+        });
+    });
 }
