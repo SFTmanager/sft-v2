@@ -350,3 +350,65 @@ function initLeaderboard() {
         });
     });
 }
+
+
+
+// --- ЛОГИКА ПОИСКА ИГРОКА ---
+const sModal = document.getElementById('search-modal');
+const btnOpenSearch = document.getElementById('open-search');
+const btnCloseSearch = document.getElementById('close-search');
+const btnDoSearch = document.getElementById('btn-do-search');
+const searchResult = document.getElementById('search-result');
+
+// Открытие/Закрытие
+if (btnOpenSearch) btnOpenSearch.onclick = () => sModal.style.display = 'flex';
+if (btnCloseSearch) {
+    btnCloseSearch.onclick = () => {
+        sModal.style.display = 'none';
+        searchResult.innerHTML = ''; // Очистка результата при закрытии
+    };
+}
+
+// Сама функция поиска
+if (btnDoSearch) {
+    btnDoSearch.onclick = async () => {
+        const sid = document.getElementById('search-id-input').value.trim();
+        
+        if (!sid) return alert("Введите ID для поиска");
+
+        searchResult.innerHTML = "<p style='color: #888; text-align: center;'>Запрос к базе данных...</p>";
+
+        try {
+            // Ищем документ в коллекции users, где ID документа — это наш номер
+            const userRef = doc(db, "users", sid);
+            const snap = await getDoc(userRef);
+
+            if (snap.exists()) {
+                const d = snap.data();
+                // Формируем красивую карточку результата
+                searchResult.innerHTML = `
+                    <div style="background: #1a1a1a; padding: 15px; border-radius: 12px; border: 1px solid #333; animation: fadeIn 0.3s;">
+                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                            <b style="color: #2196f3; font-size: 18px;">${d.nickname}</b>
+                            <span style="color: #555; font-size: 12px;">#${sid}</span>
+                        </div>
+                        <hr style="border: 0; border-top: 1px solid #222; margin: 10px 0;">
+                        <p style="margin: 5px 0; color: #4CAF50;"><b>Баланс:</b> ${Math.floor(d.javs)} JAVS</p>
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 5px; font-size: 11px; color: #888;">
+                            <span>Black: ${d.blackcoins || 0}</span>
+                            <span>White: ${d.whitecoins || 0}</span>
+                            <span>Blue: ${d.bluecoins || 0}</span>
+                            <span>Red: ${d.redcoins || 0}</span>
+                            <span>Green: ${d.greencoins || 0}</span>
+                        </div>
+                    </div>
+                `;
+            } else {
+                searchResult.innerHTML = "<p style='color: #ff5252; text-align: center;'>Пользователь не найден</p>";
+            }
+        } catch (e) {
+            console.error("Search Error:", e);
+            searchResult.innerHTML = "<p style='color: red; text-align: center;'>Ошибка доступа к данным</p>";
+        }
+    };
+}
