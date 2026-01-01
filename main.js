@@ -436,3 +436,65 @@ if (btnDoSearch) {
         }
     };
 }
+
+// --- ЛОГИКА РЕПОРТОВ ---
+const reportdiv = document.getElementById("report");
+const btnopenreport = document.getElementById("open-report");
+const btnclosereport = document.getElementById("close-report");
+const btndoreport = document.getElementById("btn-do-report");
+const reportStatus = document.getElementById("report-status");
+
+if (btnopenreport) btnopenreport.onclick = () => reportdiv.style.display = 'flex';
+
+if (btnclosereport) {
+    btnclosereport.onclick = () => {
+        reportdiv.style.display = 'none';
+        if (reportStatus) reportStatus.innerText = "";
+    };
+}
+
+if (btndoreport) {
+    btndoreport.onclick = async () => {
+        const targetId = document.getElementById('report-id-input').value.trim();
+        const reason = document.getElementById('report-reason-input').value.trim();
+        const myId = document.getElementById('view-id').innerText;
+
+        if (!targetId || !reason) return alert("Заполните все поля репорта!");
+        if (targetId === myId) return alert("Вы не можете пожаловаться на себя");
+
+        btndoreport.disabled = true;
+        if (reportStatus) reportStatus.innerText = "Отправка репорта...";
+
+        try {
+            // Добавляем документ в коллекцию "reports"
+            await addDoc(collection(db, "reports"), {
+                FROM: myId,
+                TO: targetId,
+                REASON: reason,
+                time: serverTimestamp()
+            });
+
+            if (reportStatus) {
+                reportStatus.style.color = "#4CAF50";
+                reportStatus.innerText = "Репорт успешно отправлен!";
+            }
+
+            // Очищаем и закрываем через 1.5 сек
+            setTimeout(() => {
+                document.getElementById('report-id-input').value = "";
+                document.getElementById('report-reason-input').value = "";
+                reportdiv.style.display = 'none';
+                btndoreport.disabled = false;
+                if (reportStatus) reportStatus.innerText = "";
+            }, 1500);
+
+            // Лог для админа
+            await logAction(myId, "REPORT", `Подал жалобу на ${targetId}: ${reason}`);
+
+        } catch (e) {
+            console.error("Report Error:", e);
+            alert("Ошибка при отправке: " + e.message);
+            btndoreport.disabled = false;
+        }
+    };
+}

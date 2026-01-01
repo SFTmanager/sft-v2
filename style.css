@@ -33,38 +33,163 @@ input {
     outline: none; 
     font-size: 16px; 
 }
-input:focus { border-color: #4CAF50; }
+input:focus { 
+    border-color: #4CAF50; 
+}
 
-button { width: 100%; padding: 14px; border: none; border-radius: 12px; cursor: pointer; font-weight: bold; margin-top: 10px; font-size: 16px; transition: 0.2s; }
-button:active { transform: scale(0.98); }
-.btn-primary { background: #4CAF50; color: white; }
-.btn-secondary { background: transparent; color: #666; text-decoration: underline; font-size: 13px; }
+button { 
+    width: 100%; 
+    padding: 14px; 
+    border: none; border-radius: 12px; 
+    cursor: pointer; 
+    font-weight: bold; 
+    margin-top: 10px; 
+    font-size: 16px; 
+    transition: 0.2s; 
+}
 
-.coins-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin: 15px 0; }
-.coin-item { background: #222; padding: 10px; border-radius: 14px; border: 1px solid #2a2a2a; text-align: left; }
-.coin-name { font-size: 10px; color: #888; display: block; text-transform: uppercase; }
-.coin-val { font-size: 15px; font-weight: bold; color: #fff; }
+button:active { 
+    transform: scale(0.98); 
+}
 
-.main-balance { background: linear-gradient(135deg, #1e1e1e, #111); padding: 20px; border-radius: 20px; margin-bottom: 15px; border: 1px solid #333; }
-.javs-val { font-size: 2.5em; color: #4CAF50; font-weight: 800; display: block; }
+.btn-primary { 
+    background: #4CAF50; 
+    color: white; 
+}
 
-.transfer-section { background: #222; padding: 15px; border-radius: 18px; margin-top: 25px; border: 1px solid #333; text-align: left; }
+.btn-secondary { 
+    background: transparent; 
+    color: #666; 
+    text-decoration: 
+    underline; 
+    font-size: 13px; 
+}
+
+.coins-grid { 
+    display: grid; 
+    grid-template-columns: 1fr 1fr; 
+    gap: 8px; 
+    margin: 15px 0; 
+}
+
+.coin-item { 
+    background: #222; 
+    padding: 10px;
+    border-radius: 14px; 
+    border: 1px solid #2a2a2a;
+    text-align: left; 
+}
+
+.coin-name { 
+    font-size: 10px; 
+    color: #888; 
+    display: block; 
+    text-transform: uppercase; 
+}
+
+.coin-val { 
+    font-size: 15px; 
+    font-weight: bold; 
+    color: #fff; 
+}
+
+.main-balance { 
+    background: linear-gradient(135deg, #1e1e1e, #111); 
+    padding: 20px; 
+    border-radius: 20px; 
+    margin-bottom: 15px; 
+    border: 1px solid #333; 
+}
+
+.javs-val { 
+    font-size: 2.5em; 
+    color: #4CAF50; 
+    font-weight: 800; 
+    display: block; 
+}
+
+.transfer-section { 
+    background: #222; 
+    padding: 15px; 
+    border-radius: 18px; 
+    margin-top: 25px; 
+    border: 1px solid #333; 
+    text-align: left; 
+}
 
 /* СТИЛИ РЫНКА И СЛАЙДЕРА */
-.market-section { margin-top: 30px; border-top: 2px solid #2a2a2a; padding-top: 20px; }
-.market-title { font-size: 12px; color: #444; text-transform: uppercase; letter-spacing: 2px; margin-bottom: 15px; }
+.market-section { 
+    margin-top: 30px; 
+    border-top: 2px solid #2a2a2a; 
+    padding-top: 20px; 
+}
 
-.coin-card { background: #1a1a1a; padding: 15px; border-radius: 20px; margin-bottom: 12px; border: 1px solid #2a2a2a; text-align: left; }
-.coin-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+.market-title { 
+    font-size: 12px; 
+    color: #444; 
+    text-transform: uppercase; 
+    letter-spacing: 2px; 
+    margin-bottom: 15px; 
+}
 
-.slider-container { margin: 10px 0; display: flex; align-items: center; gap: 10px; }
-.coin-slider { flex: 1; accent-color: #4CAF50; cursor: pointer; }
-.slider-val { font-weight: bold; color: #4CAF50; min-width: 25px; text-align: center; }
+.coin-card { 
+    background: #1a1a1a; 
+    padding: 15px; 
+    border-radius: 20px; 
+    margin-bottom: 12px; 
+    border: 1px solid #2a2a2a; 
+    text-align: left; 
+}
 
-.trade-btns { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-.btn-buy-coin { background: #4CAF50; color: white; padding: 10px; font-size: 12px; }
-.btn-sell-coin { background: #f44336; color: white; padding: 10px; font-size: 12px; }
-.btn-buy-coin:disabled { background: #222; color: #444; }
+.coin-header { 
+    display: flex; 
+    justify-content: space-between; 
+    align-items: center; 
+    margin-bottom: 10px; 
+}
+
+.slider-container { 
+    margin: 10px 0; 
+    display: flex; 
+    align-items: center; 
+    gap: 10px; 
+}
+
+.coin-slider { 
+    flex: 1; 
+    accent-color: #4CAF50; 
+    cursor: pointer; 
+}
+
+.slider-val { 
+    font-weight: bold; 
+    color: #4CAF50; 
+    min-width: 25px; 
+    text-align: center; 
+}
+
+.trade-btns { 
+    display: grid; 
+    grid-template-columns: 1fr 1fr; 
+    gap: 10px; 
+}
+.btn-buy-coin { 
+    background: #4CAF50; 
+    color: white; 
+    padding: 10px; 
+    font-size: 12px; 
+}
+
+.btn-sell-coin { 
+    background: #f44336; 
+    color: white; 
+    padding: 10px; 
+    font-size: 12px; 
+}
+.btn-buy-coin:disabled { 
+    background: #222; 
+    color: #444; 
+}
 
 /* ЦВЕТА */
 .c-black { color: #fff; }
@@ -74,6 +199,7 @@ button:active { transform: scale(0.98); }
 .c-green { color: #4CAF50; opacity: 0.5; }
 .c-gray {color: #333333}
 .c-light-gray {color: #444}
+
 /* Фон за окном */
 .modal-overlay {
     position: fixed;
