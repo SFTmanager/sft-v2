@@ -325,26 +325,50 @@ function initLeaderboard() {
     const leaderboardList = document.getElementById('leaderboard-list');
     if (!leaderboardList) return;
 
-    // Запрос: тянем топ-10 богачей по JAVS
+    // Берем чуть больше людей (например, 30), чтобы было из чего сортировать при равных балансах
     const q = query(
         collection(db, "users"), 
         orderBy("javs", "desc"), 
-        limit(10)
+        limit(5) 
     );
 
     onSnapshot(q, (snap) => {
+        let users = [];
+        snap.forEach(doc => {
+            users.push(doc.data());
+        });
+
+        // РУЧНАЯ СОРТИРОВКА
+        users.sort((a, b) => {
+            // 1. Сначала по JAVS (от большего к меньшему)
+            if (b.javs !== a.javs) {
+                return b.javs - a.javs;
+            }
+            // 2. Если JAVS равны, по ID (от меньшего к большему)
+            return a.id - b.id;
+        });
+
+        // Оставляем только топ-10 после нашей сортировки
+        const top10 = users.slice(0, 10);
+
         leaderboardList.innerHTML = '';
         let rank = 1;
 
-        snap.forEach(doc => {
-            const d = doc.data();
+        top10.forEach(d => {
             const item = document.createElement('div');
             item.className = 'leader-item';
-            // Выделяем топ-3 золотом/серебром
             const medal = rank === 1 ? '🥇' : rank === 2 ? '🥈' : rank === 3 ? '🥉' : `#${rank}`;
             
             item.innerHTML = `
-                <span><h2>${medal} <b>${d.nickname}: ${Math.floor(d.javs)} J</h2></b></span>`;
+                <div style="display: flex; justify-content: space-between; align-items: center; width: 100%; padding: 5px 0;">
+                    <span>
+                        <span style="font-size: 18px; margin-right: 10px;">${medal}</span>
+                        <b>${d.nickname}</b> 
+                        <small style="color: #555; margin-left: 5px;">#${d.id}</small>
+                    </span>
+                    <b style="color: #4CAF50;">${Math.floor(d.javs)} J</b>
+                </div>
+            `;
             leaderboardList.appendChild(item);
             rank++;
         });
