@@ -192,7 +192,7 @@ button:active {
 }
 
 /* ЦВЕТА */
-.c-black { color: #fff; }
+.c-black { color: #000; }
 .c-white { color: #ddd; }
 .c-blue { color: #2196F3; }
 .c-red { color: #f44336; }
@@ -236,4 +236,5 @@ button:active {
     margin-top: 25px; 
     border: 1px solid #333; 
     text-align: center;
+
 }
