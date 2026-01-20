@@ -134,7 +134,7 @@ onSnapshot(collection(db, "currencies"), (snap) => {
         const max = coin.max || 0;
         const available = max - total;
         const shortName = id.replace('coins', '');
-        
+        console.log(shortName)
         const card = document.createElement('div');
         card.className = 'coin-card';
         card.innerHTML = `
@@ -498,3 +498,89 @@ if (btndoreport) {
         }
     };
 }
+
+// --- ЕЖЕДНЕВНЫЕ ПОДАРКИ (ТВОЯ МАТЕМАТИКА) ---
+document.getElementById('get-daily').onclick = async () => {
+    const myId = document.getElementById('view-id').innerText;
+    if (myId === "00000") return;
+
+    const userRef = doc(db, "users", myId);
+    
+    try {
+        await runTransaction(db, async (t) => {
+            const uSnap = await t.get(userRef);
+            if (!uSnap.exists()) throw "Ошибка профиля";
+            
+            const userData = uSnap.data();
+            const now = Date.now();
+            const cooldown = 24 * 60 * 60 * 1000; 
+
+            if (now - (userData.lastGiftTime || 0) < cooldown) {
+                const diff = cooldown - (now - (userData.lastGiftTime || 0));
+                const h = Math.floor(diff / 3600000);
+                const m = Math.floor((diff % 3600000) / 60000);
+                throw `Рано! Жди еще ${h}ч. ${m}м.`;
+            }
+
+            // --- ГЕНЕРАЦИЯ НАГРАД ---
+            let updates = {};
+            let rewardsList = [];
+
+            // 1. JAVS - 100% шанс (от 10 до 50)
+            const jAmt = Math.floor(Math.random() * 41) + 10;
+            updates.javs = (userData.javs || 0) + jAmt;
+            rewardsList.push(`${jAmt} J`);
+
+            // Функция для проверки шанса и добавления в список
+            const roll = (chance) => Math.random() * 100 < chance;
+
+            // 2. Blackcoins - 1% шанс (макс 1)
+            if (roll(1)) {
+                const amt = 1;
+                updates.blackcoins = (userData.blackcoins || 0) + amt;
+                rewardsList.push(`⭐ 1 BlackCoin`);
+            }
+
+            // 3. Whitecoins - 10% шанс (от 1 до 5)
+            if (roll(10)) {
+                const amt = Math.floor(Math.random() * 5) + 1;
+                updates.whitecoins = (userData.whitecoins || 0) + amt;
+                rewardsList.push(`⚪ ${amt} WhiteCoins`);
+            }
+
+            // 4. Bluecoins - 20% шанс (от 1 до 10)
+            if (roll(20)) {
+                const amt = Math.floor(Math.random() * 10) + 1;
+                updates.bluecoins = (userData.bluecoins || 0) + amt;
+                rewardsList.push(`🔵 ${amt} BlueCoins`);
+            }
+
+            // 5. Redcoins - 30% шанс (от 1 до 50)
+            if (roll(30)) {
+                const amt = Math.floor(Math.random() * 50) + 1;
+                updates.redcoins = (userData.redcoins || 0) + amt;
+                rewardsList.push(`🔴 ${amt} RedCoins`);
+            }
+
+            // 6. Greencoins - 50% шанс (от 1 до 50)
+            if (roll(50)) {
+                const amt = Math.floor(Math.random() * 50) + 1;
+                updates.greencoins = (userData.greencoins || 0) + amt;
+                rewardsList.push(`🟢 ${amt} GreenCoins`);
+            }
+
+            // Фиксируем время
+            updates.lastGiftTime = now;
+
+            t.update(userRef, updates);
+            return rewardsList.join(", ");
+
+        }).then(async (resText) => {
+            alert("Вы получили: " + resText);
+            await logAction(myId, "GIFT", "Получен бонус: " + resText);
+        });
+
+    } catch (e) {
+        alert(e);
+    }
+};
