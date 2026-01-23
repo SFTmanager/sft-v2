@@ -42,7 +42,7 @@ async function logAction(userId, type, message) {
             msg: message,
             time: serverTimestamp()
         });
-    } catch (e) { console.error("Ошибка записи лога:", e); }
+    } catch (e) { console.error("❗Ошибка записи лога:", e); }
 }
 
 // --- ПРОВЕРКА АВТОРИЗАЦИИ И БАНОВ ---
@@ -63,7 +63,7 @@ onAuthStateChanged(auth, async (user) => {
         const bannedIps = banIpSnap.data() || {};
 
         if (bannedIps[currentIP]) {
-            alert(`ДОСТУП ЗАПРЕЩЕН!\nВаш IP (${currentIP}) заблокирован.`);
+            alert(`❗ДОСТУП ЗАПРЕЩЕН!\nВаш IP (${currentIP}) заблокирован.`);
             await signOut(auth);
             window.location.href = 'login.html';
             return;
@@ -83,7 +83,7 @@ onAuthStateChanged(auth, async (user) => {
             const bannedIds = banIdSnap.data() || {};
 
             if (bannedIds[myId]) {
-                alert(`ВАШ АККАУНТ (${myId}) ЗАБЛОКИРОВАН!`);
+                alert(`❗ВАШ АККАУНТ (${myId}) ЗАБЛОКИРОВАН!`);
                 await signOut(auth);
                 window.location.href = 'login.html';
                 return;
@@ -107,13 +107,13 @@ onAuthStateChanged(auth, async (user) => {
                     const el = document.getElementById(`v-${shortId}`);
                     if (el) el.innerText = d[id] || 0;
                 });
-            }, (err) => console.error("Ошибка Snapshot юзера:", err));
+            }, (err) => console.error("❗Ошибка Snapshot юзера:", err));
             initLeaderboard();
         } else {
-            console.error("Документ пользователя не найден в Firestore.");
+            console.error("❗Документ пользователя не найден в Firestore.");
         }
     } catch (e) { 
-        console.error("Критическая ошибка инициализации:", e); 
+        console.error("❗Критическая ошибка инициализации:", e); 
     }
 });
 
@@ -156,13 +156,13 @@ onSnapshot(collection(db, "currencies"), (snap) => {
             </div>
 
             <div class="trade-btns">
-                <button class="btn-buy-coin" onclick="trade('${id}', 'buy')" ${available <= 0 ? 'disabled' : ''}>КУПИТЬ</button>
-                <button class="btn-sell-coin" onclick="trade('${id}', 'sell')">ПРОДАТЬ</button>
+                <button class="btn-buy-coin" onclick="trade('${id}', 'buy')" ${available <= 0 ? 'disabled' : ''}>📈КУПИТЬ</button>
+                <button class="btn-sell-coin" onclick="trade('${id}', 'sell')">📉ПРОДАТЬ</button>
             </div>
         `;
         container.appendChild(card);
     });
-}, (err) => console.error("Ошибка Snapshot рынка:", err));
+}, (err) => console.error("❗Ошибка Snapshot рынка:", err));
 // --- ТОРГОВЛЯ ---
 async function trade(coinId, type) {
     const myId = document.getElementById('view-id').innerText;
@@ -179,7 +179,7 @@ async function trade(coinId, type) {
             const uS = await t.get(userRef);
             const cS = await t.get(coinRef);
             
-            if (!uS.exists() || !cS.exists()) throw "Ошибка данных базы!";
+            if (!uS.exists() || !cS.exists()) throw "❗Ошибка данных базы!";
             
             const u = uS.data();
             const c = cS.data();
@@ -187,8 +187,8 @@ async function trade(coinId, type) {
 
             if (type === 'buy') {
                 const availableOnMarket = c.max - (c.total || 0);
-                if (availableOnMarket < amount) throw "На рынке нет столько монет!";
-                if (u.javs < totalCost) throw "Недостаточно JAVS!";
+                if (availableOnMarket < amount) throw "❗На рынке нет столько монет!";
+                if (u.javs < totalCost) throw "❗Недостаточно JAVS!";
                 
                 t.update(userRef, { 
                     javs: u.javs - totalCost, 
@@ -196,7 +196,7 @@ async function trade(coinId, type) {
                 });
                 t.update(coinRef, { total: (c.total || 0) + amount });
             } else {
-                if (!u[coinId] || u[coinId] < amount) throw "Недостаточно монет в кошельке!";
+                if (!u[coinId] || u[coinId] < amount) throw "❗Недостаточно монет в кошельке!";
                 
                 t.update(userRef, { 
                     javs: u.javs + totalCost, 
@@ -209,7 +209,7 @@ async function trade(coinId, type) {
         await logAction(myId, "MARKET", `${type === 'buy' ? 'Купил' : 'Продал'} ${amount} ${coinId}`);
     } catch (e) { 
         alert(e); 
-        console.error("Ошибка транзакции:", e);
+        console.error("❗Ошибка транзакции:", e);
     }
 }
 window.trade = trade;
@@ -223,8 +223,8 @@ if (btnTransfer) {
         const type = document.getElementById('transfer-type').value; 
         const mid = document.getElementById('view-id').innerText;
 
-        if (!tid || isNaN(amt) || amt <= 0) return alert("Неверные данные перевода");
-        if (tid === mid) return alert("Нельзя переводить самому себе");
+        if (!tid || isNaN(amt) || amt <= 0) return alert("❗Неверные данные перевода");
+        if (tid === mid) return alert("❗Нельзя переводить самому себе");
 
         try {
             await runTransaction(db, async (t) => {
@@ -239,14 +239,14 @@ if (btnTransfer) {
                 const tS = await t.get(tR);
                 
                 const myBal = mS.data()[type] || 0;
-                if (myBal < amt) throw "Недостаточно средств для перевода!";
+                if (myBal < amt) throw "❗Недостаточно средств для перевода!";
 
                 t.update(mR, { [type]: myBal - amt });
                 t.update(tR, { [type]: (tS.data()[type] || 0) + amt });
             });
 
             await logAction(mid, "TRANSFER", `Перевел ${amt} ${type} игроку ${tid}`);
-            alert("Перевод выполнен!");
+            alert("✅Перевод выполнен!");
         } catch (e) { 
             alert(e); 
         }
@@ -278,10 +278,10 @@ if (btnSubmitPromo) {
                 const userRef = doc(db, "users", myId);
                 const uS = await t.get(userRef);
 
-                if (!pS.exists()) throw "Код не существует!";
+                if (!pS.exists()) throw "❗Код не существует!";
                 const p = pS.data();
                 
-                if (p.used_by && p.used_by.includes(myId)) throw "Вы уже активировали этот код!";
+                if (p.used_by && p.used_by.includes(myId)) throw "❗Вы уже активировали этот код!";
                 
                 const updates = {};
                 const awardsArray = []; // Массив для красивого текста
@@ -301,7 +301,7 @@ if (btnSubmitPromo) {
             await logAction(myId, "PROMO", `Активировал код: ${code}. Награды: ${awardsSummary}`);
             
             // Выводим уведомление с перечислением наград
-            alert(`Промокод успешно активирован! Награды: ${awardsSummary}`);
+            alert(`🎁Промокод успешно активирован! Награды: ${awardsSummary}`);
             
             pModal.style.display = 'none';
         } catch (e) { 
@@ -398,7 +398,7 @@ if (btnDoSearch) {
     btnDoSearch.onclick = async () => {
         const sid = document.getElementById('search-id-input').value.trim();
         
-        if (!sid) return alert("Введите ID для поиска");
+        if (!sid) return alert("🧿Введите ID для поиска");
 
         searchResult.innerHTML = "<p style='color: #888; text-align: center;'>Запрос к базе данных...</p>";
 
@@ -413,26 +413,26 @@ if (btnDoSearch) {
                 searchResult.innerHTML = `
                     <div style="background: #1a1a1a; padding: 15px; border-radius: 12px; border: 1px solid #333; animation: fadeIn 0.3s;">
                         <div style="display: flex; justify-content: space-between; align-items: center;">
-                            <b style="color: #2196f3; font-size: 18px;">${d.nickname}</b>
-                            <span style="color: #555; font-size: 12px;">#${sid}</span>
+                            <b style="color: #2196f3; font-size: 18px;">🪪${d.nickname}</b>
+                            <span style="color: #555; font-size: 12px;">🪪 #${sid}</span>
                         </div>
                         <hr style="border: 0; border-top: 1px solid #222; margin: 10px 0;">
-                        <p style="margin: 5px 0; color: #4CAF50;"><b>Баланс:</b> ${Math.floor(d.javs)} JAVS</p>
+                        <p style="margin: 5px 0; color: #4CAF50;"><b>Баланс:</b> 🔹${Math.floor(d.javs)} JAVS</p>
                         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 5px; font-size: 11px; color: #888;">
-                            <span>Black: ${d.blackcoins || 0}</span>
-                            <span>White: ${d.whitecoins || 0}</span>
-                            <span>Blue: ${d.bluecoins || 0}</span>
-                            <span>Red: ${d.redcoins || 0}</span>
-                            <span>Green: ${d.greencoins || 0}</span>
+                            <span>Black: ⚫${d.blackcoins || 0}</span>
+                            <span>White: ⚪${d.whitecoins || 0}</span>
+                            <span>Blue: 🔵${d.bluecoins || 0}</span>
+                            <span>Red: 🔴${d.redcoins || 0}</span>
+                            <span>Green: 🟢${d.greencoins || 0}</span>
                         </div>
                     </div>
                 `;
             } else {
-                searchResult.innerHTML = "<p style='color: #ff5252; text-align: center;'>Пользователь не найден</p>";
+                searchResult.innerHTML = "<p style='color: #ff5252; text-align: center;'>❗Пользователь не найден</p>";
             }
         } catch (e) {
             console.error("Search Error:", e);
-            searchResult.innerHTML = "<p style='color: red; text-align: center;'>Ошибка доступа к данным</p>";
+            searchResult.innerHTML = "<p style='color: red; text-align: center;'>❗Ошибка доступа к данным</p>";
         }
     };
 }
@@ -459,11 +459,11 @@ if (btndoreport) {
         const reason = document.getElementById('report-reason-input').value.trim();
         const myId = document.getElementById('view-id').innerText;
 
-        if (!targetId || !reason) return alert("Заполните все поля репорта!");
-        if (targetId === myId) return alert("Вы не можете пожаловаться на себя");
+        if (!targetId || !reason) return alert("❗Заполните все поля репорта!");
+        if (targetId === myId) return alert("❗Вы не можете пожаловаться на себя");
 
         btndoreport.disabled = true;
-        if (reportStatus) reportStatus.innerText = "Отправка репорта...";
+        if (reportStatus) reportStatus.innerText = "📮Отправка репорта...";
 
         try {
             // Добавляем документ в коллекцию "reports"
@@ -476,7 +476,7 @@ if (btndoreport) {
 
             if (reportStatus) {
                 reportStatus.style.color = "#4CAF50";
-                reportStatus.innerText = "Репорт успешно отправлен!";
+                reportStatus.innerText = "✅Репорт успешно отправлен!";
             }
 
             // Очищаем и закрываем через 1.5 сек
@@ -493,7 +493,7 @@ if (btndoreport) {
 
         } catch (e) {
             console.error("Report Error:", e);
-            alert("Ошибка при отправке: " + e.message);
+            alert("❗Ошибка при отправке: " + e.message);
             btndoreport.disabled = false;
         }
     };
@@ -506,10 +506,28 @@ document.getElementById('get-daily').onclick = async () => {
 
     const userRef = doc(db, "users", myId);
     
+    // --- НАСТРОЙКИ ШАНСОВ И МАКСИМУМОВ ---
+    // Шансы в процентах (0-100)
+    let javschance = 100; 
+    let bcchance = 1;     // Black
+    let wcchance = 10;    // White
+    let blcchance = 20;   // Blue
+    let rcchance = 30;    // Red
+    let gcchance = 50;    // Green
+
+    // Максимальное количество монет
+    let mjavs = 50;
+    let mbc = 1;
+    let mwc = 5;
+    let mblc = 10;
+    let mrc = 50;
+    let mgc = 50;
+    // -------------------------------------
+
     try {
         await runTransaction(db, async (t) => {
             const uSnap = await t.get(userRef);
-            if (!uSnap.exists()) throw "Ошибка профиля";
+            if (!uSnap.exists()) throw "❗Ошибка профиля";
             
             const userData = uSnap.data();
             const now = Date.now();
@@ -519,59 +537,57 @@ document.getElementById('get-daily').onclick = async () => {
                 const diff = cooldown - (now - (userData.lastGiftTime || 0));
                 const h = Math.floor(diff / 3600000);
                 const m = Math.floor((diff % 3600000) / 60000);
-                throw `Рано! Жди еще ${h}ч. ${m}м.`;
+                throw `Рано! Жди еще ${h}ч. ${m}м. 🕐`;
             }
 
-            // --- ГЕНЕРАЦИЯ НАГРАД ---
             let updates = {};
             let rewardsList = [];
-
-            // 1. JAVS - 100% шанс (от 10 до 50)
-            const jAmt = Math.floor(Math.random() * 41) + 10;
-            updates.javs = (userData.javs || 0) + jAmt;
-            rewardsList.push(`${jAmt} J`);
-
-            // Функция для проверки шанса и добавления в список
             const roll = (chance) => Math.random() * 100 < chance;
 
-            // 2. Blackcoins - 1% шанс (макс 1)
-            if (roll(1)) {
-                const amt = 1;
-                updates.blackcoins = (userData.blackcoins || 0) + amt;
-                rewardsList.push(`⭐ 1 BlackCoin`);
+            // 1. JAVS (Гарантированно, если шанс 100)
+            if (roll(javschance)) {
+                const minJ = 10; 
+                const amt = Math.floor(Math.random() * (mjavs - minJ + 1)) + minJ;
+                updates.javs = (userData.javs || 0) + amt;
+                rewardsList.push(`🔹 ${amt} J`);
             }
 
-            // 3. Whitecoins - 10% шанс (от 1 до 5)
-            if (roll(10)) {
-                const amt = Math.floor(Math.random() * 5) + 1;
+            // 2. Blackcoins
+            if (roll(bcchance)) {
+                const amt = mbc; // так как макс 1
+                updates.blackcoins = (userData.blackcoins || 0) + amt;
+                rewardsList.push(`⚫ ${amt} BlackCoin`);
+            }
+
+            // 3. Whitecoins
+            if (roll(wcchance)) {
+                const amt = Math.floor(Math.random() * mwc) + 1;
                 updates.whitecoins = (userData.whitecoins || 0) + amt;
                 rewardsList.push(`⚪ ${amt} WhiteCoins`);
             }
 
-            // 4. Bluecoins - 20% шанс (от 1 до 10)
-            if (roll(20)) {
-                const amt = Math.floor(Math.random() * 10) + 1;
+            // 4. Bluecoins
+            if (roll(blcchance)) {
+                const amt = Math.floor(Math.random() * mblc) + 1;
                 updates.bluecoins = (userData.bluecoins || 0) + amt;
                 rewardsList.push(`🔵 ${amt} BlueCoins`);
             }
 
-            // 5. Redcoins - 30% шанс (от 1 до 50)
-            if (roll(30)) {
-                const amt = Math.floor(Math.random() * 50) + 1;
+            // 5. Redcoins
+            if (roll(rcchance)) {
+                const amt = Math.floor(Math.random() * mrc) + 1;
                 updates.redcoins = (userData.redcoins || 0) + amt;
                 rewardsList.push(`🔴 ${amt} RedCoins`);
             }
 
-            // 6. Greencoins - 50% шанс (от 1 до 50)
-            if (roll(50)) {
-                const amt = Math.floor(Math.random() * 50) + 1;
+            // 6. Greencoins
+            if (roll(gcchance)) {
+                const amt = Math.floor(Math.random() * mgc) + 1;
                 updates.greencoins = (userData.greencoins || 0) + amt;
                 rewardsList.push(`🟢 ${amt} GreenCoins`);
             }
 
-            // Фиксируем время
             updates.lastGiftTime = now;
-
             t.update(userRef, updates);
             return rewardsList.join(", ");
 
@@ -582,5 +598,102 @@ document.getElementById('get-daily').onclick = async () => {
 
     } catch (e) {
         alert(e);
+    }
+};
+// --- СИСТЕМА НОВОСТЕЙ (ИСПРАВЛЕННАЯ) ---
+let currentNewsId = 0;
+let maxNewsId = 0;
+
+const nModal = document.getElementById('news-modal');
+const nText = document.getElementById('news-text');
+const nDate = document.getElementById('news-date');
+
+// Открытие модалки
+document.getElementById('open-news').onclick = async () => {
+    nModal.style.display = 'flex';
+    nText.innerText = "Загрузка...";
+    await initNews();
+};
+
+document.getElementById('close-news').onclick = () => nModal.style.display = 'none';
+
+async function initNews() {
+    try {
+        // Берем все документы из коллекции news
+        const snap = await getDocs(collection(db, "news"));
+        
+        if (snap.empty) {
+            nText.innerText = "Новостей пока нет.";
+            document.getElementById('news-prev').style.display = 'none';
+            document.getElementById('news-next').style.display = 'none';
+            return;
+        }
+
+        // Собираем все ID, превращаем в числа и находим самое большое
+        const ids = snap.docs.map(d => parseInt(d.id)).filter(id => !isNaN(id));
+        maxNewsId = Math.max(...ids);
+        currentNewsId = maxNewsId;
+
+        await displayNews(currentNewsId);
+    } catch (e) {
+        console.error("Ошибка новостей:", e);
+        nText.innerText = "Ошибка доступа к базе.";
+    }
+}
+
+async function displayNews(id) {
+    try {
+        const nSnap = await getDoc(doc(db, "news", id.toString()));
+
+        if (nSnap.exists()) {
+            const data = nSnap.data();
+            nText.innerText = data.text || "Текст отсутствует";
+
+            // --- ОБРАБОТКА TIMESTAMP ---
+            if (data.date) {
+                // Если это Firebase Timestamp, у него есть метод toDate()
+                // Если это обычное число (ms), создаем объект Date из него
+                const dateObj = data.date.toDate ? data.date.toDate() : new Date(data.date);
+                
+                // Форматируем: День.Месяц.Год Часы:Минуты
+                nDate.innerText = dateObj.toLocaleString('ru-RU', {
+                    day: '2-digit',
+                    month: '2-digit',
+                    year: 'numeric',
+                    hour: '2-digit',
+                    minute: '2-digit'
+                });
+            } else {
+                nDate.innerText = "Дата не указана";
+            }
+        } else {
+            nText.innerText = `Новость #${id} не найдена.`;
+        }
+
+        const btnPrev = document.getElementById('news-prev');
+        const btnNext = document.getElementById('news-next');
+        btnPrev.disabled = (id <= 1);
+        btnNext.disabled = (id >= maxNewsId);
+        btnPrev.style.opacity = (id <= 1) ? "0.3" : "1";
+        btnNext.style.opacity = (id >= maxNewsId) ? "0.3" : "1";
+
+    } catch (e) {
+        console.error(e);
+        nText.innerText = "Ошибка при загрузке новости.";
+    }
+}
+
+// Навигация
+document.getElementById('news-prev').onclick = () => {
+    if (currentNewsId > 1) {
+        currentNewsId--;
+        displayNews(currentNewsId);
+    }
+};
+
+document.getElementById('news-next').onclick = () => {
+    if (currentNewsId < maxNewsId) {
+        currentNewsId++;
+        displayNews(currentNewsId);
     }
 };
