@@ -499,7 +499,6 @@ if (btndoreport) {
     };
 }
 
-// --- ЕЖЕДНЕВНЫЕ ПОДАРКИ (ТВОЯ МАТЕМАТИКА) ---
 document.getElementById('get-daily').onclick = async () => {
     const myId = document.getElementById('view-id').innerText;
     if (myId === "00000") return;
@@ -507,26 +506,30 @@ document.getElementById('get-daily').onclick = async () => {
     const userRef = doc(db, "users", myId);
     
     // --- НАСТРОЙКИ ШАНСОВ И МАКСИМУМОВ ---
-    // Шансы в процентах (0-100)
-    let javschance = 100; 
-    let bcchance = 1;     // Black
-    let wcchance = 10;    // White
-    let blcchance = 20;   // Blue
-    let rcchance = 30;    // Red
-    let gcchance = 50;    // Green
+    let javschance = 100, bcchance = 1, wcchance = 10, blcchance = 20, rcchance = 30, gcchance = 50;
+    let mjavs = 50, mbc = 1, mwc = 5, mblc = 10, mrc = 50, mgc = 50;
 
-    // Максимальное количество монет
-    let mjavs = 50;
-    let mbc = 1;
-    let mwc = 5;
-    let mblc = 10;
-    let mrc = 50;
-    let mgc = 50;
-    // -------------------------------------
+    // ИСПРАВЛЕННЫЕ ССЫЛКИ (теперь совпадают с рынком и базой)
+    const cRefs = {
+        black: doc(db, "currencies", "blackcoins"),
+        white: doc(db, "currencies", "whitecoins"),
+        blue: doc(db, "currencies", "bluecoins"),
+        red: doc(db, "currencies", "redcoins"),
+        green: doc(db, "currencies", "greencoins")
+    };
 
     try {
         await runTransaction(db, async (t) => {
-            const uSnap = await t.get(userRef);
+            // ШАГ 1: Читаем данные
+            const [uSnap, bSnap, wSnap, blSnap, rSnap, gSnap] = await Promise.all([
+                t.get(userRef),
+                t.get(cRefs.black),
+                t.get(cRefs.white),
+                t.get(cRefs.blue),
+                t.get(cRefs.red),
+                t.get(cRefs.green)
+            ]);
+
             if (!uSnap.exists()) throw "❗Ошибка профиля";
             
             const userData = uSnap.data();
@@ -540,64 +543,60 @@ document.getElementById('get-daily').onclick = async () => {
                 throw `Рано! Жди еще ${h}ч. ${m}м. 🕐`;
             }
 
-            let updates = {};
+            let updates = { lastGiftTime: now };
             let rewardsList = [];
+            let globalUpdates = []; 
             const roll = (chance) => Math.random() * 100 < chance;
 
-            // 1. JAVS (Гарантированно, если шанс 100)
+            // 1. JAVS
             if (roll(javschance)) {
-                const minJ = 10; 
-                const amt = Math.floor(Math.random() * (mjavs - minJ + 1)) + minJ;
-                updates.javs = (userData.javs || 0) + amt;
-                rewardsList.push(`🔹 ${amt} J`);
+                const amtJ = Math.floor(Math.random() * (mjavs - 10 + 1)) + 10;
+                updates.javs = (userData.javs || 0) + amtJ;
+                rewardsList.push(`🔹 ${amtJ} J`);
             }
 
-            // 2. Blackcoins
-            if (roll(bcchance)) {
-                const amt = mbc; // так как макс 1
-                updates.blackcoins = (userData.blackcoins || 0) + amt;
-                rewardsList.push(`⚫ ${amt} BlackCoin`);
-            }
+            // Вспомогательная функция (внутри транзакции)
+            const processCoin = (key, snap, chance, max, icon, label) => {
+                if (roll(chance)) {
+                    const amt = (max === 1) ? 1 : Math.floor(Math.random() * max) + 1;
+                    const fieldName = key + "coins"; // blackcoins, whitecoins...
+                    
+                    updates[fieldName] = (userData[fieldName] || 0) + amt;
+                    rewardsList.push(`${icon} ${amt} ${label}`);
+                    
+                    if (snap.exists()) {
+                        globalUpdates.push({
+                            ref: cRefs[key],
+                            newTotal: (snap.data().total || 0) + amt
+                        });
+                    }
+                }
+            };
 
-            // 3. Whitecoins
-            if (roll(wcchance)) {
-                const amt = Math.floor(Math.random() * mwc) + 1;
-                updates.whitecoins = (userData.whitecoins || 0) + amt;
-                rewardsList.push(`⚪ ${amt} WhiteCoins`);
-            }
+            processCoin('black', bSnap, bcchance, mbc, '⚫', 'BlackCoin');
+            processCoin('white', wSnap, wcchance, mwc, '⚪', 'WhiteCoins');
+            processCoin('blue', blSnap, blcchance, mblc, '🔵', 'BlueCoins');
+            processCoin('red', rSnap, rcchance, mrc, '🔴', 'RedCoins');
+            processCoin('green', gSnap, gcchance, mgc, '🟢', 'GreenCoins');
 
-            // 4. Bluecoins
-            if (roll(blcchance)) {
-                const amt = Math.floor(Math.random() * mblc) + 1;
-                updates.bluecoins = (userData.bluecoins || 0) + amt;
-                rewardsList.push(`🔵 ${amt} BlueCoins`);
-            }
-
-            // 5. Redcoins
-            if (roll(rcchance)) {
-                const amt = Math.floor(Math.random() * mrc) + 1;
-                updates.redcoins = (userData.redcoins || 0) + amt;
-                rewardsList.push(`🔴 ${amt} RedCoins`);
-            }
-
-            // 6. Greencoins
-            if (roll(gcchance)) {
-                const amt = Math.floor(Math.random() * mgc) + 1;
-                updates.greencoins = (userData.greencoins || 0) + amt;
-                rewardsList.push(`🟢 ${amt} GreenCoins`);
-            }
-
-            updates.lastGiftTime = now;
+            // ШАГ 2: Запись
             t.update(userRef, updates);
+            globalUpdates.forEach(upd => {
+                t.update(upd.ref, { total: upd.newTotal });
+            });
+
             return rewardsList.join(", ");
 
         }).then(async (resText) => {
             alert("Вы получили: " + resText);
-            await logAction(myId, "GIFT", "Получен бонус: " + resText);
+            if (typeof logAction === "function") {
+                await logAction(myId, "GIFT", "Получен бонус: " + resText);
+            }
         });
 
     } catch (e) {
         alert(e);
+        console.error("Ошибка подарка:", e);
     }
 };
 // --- СИСТЕМА НОВОСТЕЙ (ИСПРАВЛЕННАЯ) ---
