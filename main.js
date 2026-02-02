@@ -507,7 +507,7 @@ document.getElementById('get-daily').onclick = async () => {
     
     // --- НАСТРОЙКИ ШАНСОВ И МАКСИМУМОВ ---
     let javschance = 100, bcchance = 1, wcchance = 10, blcchance = 20, rcchance = 30, gcchance = 50;
-    let mjavs = 50, mbc = 1, mwc = 2, mblc = 5, mrc = 10, mgc = 25;
+    let mjavs = 100, mbc = 2, mwc = 4, mblc = 10, mrc = 20, mgc = 50;
 
     // ИСПРАВЛЕННЫЕ ССЫЛКИ (теперь совпадают с рынком и базой)
     const cRefs = {
@@ -695,4 +695,5 @@ document.getElementById('news-next').onclick = () => {
         currentNewsId++;
         displayNews(currentNewsId);
     }
+
 };
