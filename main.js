@@ -34,9 +34,9 @@ const db = getFirestore(app);
 const COIN_ORDER = ['blackcoins', 'whitecoins', 'bluecoins', 'redcoins', 'greencoins'];
 
 // --- УНИВЕРСАЛЬНАЯ ФУНКЦИЯ ЛОГА ---
-async function logAction(userId, type, message) {
+async function logAction(userId, type, message, path) {
     try {
-        await addDoc(collection(db, "config", "log", "entries"), {
+        await addDoc(collection(db, "config", "log", path), {
             userId: userId,
             type: type,
             msg: message,
@@ -206,7 +206,7 @@ async function trade(coinId, type) {
             }
         });
 
-        await logAction(myId, "MARKET", `${type === 'buy' ? 'Купил' : 'Продал'} ${amount} ${coinId}`);
+        await logAction(myId, "MARKET", `${type === 'buy' ? 'Купил' : 'Продал'} ${amount} ${coinId}`, "shop");
     } catch (e) { 
         alert(e); 
         console.error("❗Ошибка транзакции:", e);
@@ -245,7 +245,7 @@ if (btnTransfer) {
                 t.update(tR, { [type]: (tS.data()[type] || 0) + amt });
             });
 
-            await logAction(mid, "TRANSFER", `Перевел ${amt} ${type} игроку ${tid}`);
+            await logAction(mid, "TRANSFER", `Перевел ${amt} ${type} игроку ${tid}`, "TRANSFER");
             alert("✅Перевод выполнен!");
         } catch (e) { 
             alert(e); 
@@ -298,7 +298,7 @@ if (btnSubmitPromo) {
                 t.update(promoRef, { used_by: [...(p.used_by || []), myId] });
             });
 
-            await logAction(myId, "PROMO", `Активировал код: ${code}. Награды: ${awardsSummary}`);
+            await logAction(myId, "PROMO", `Активировал код: ${code}. Награды: ${awardsSummary}`, "PROMOS");
             
             // Выводим уведомление с перечислением наград
             alert(`🎁Промокод успешно активирован! Награды: ${awardsSummary}`);
@@ -489,7 +489,7 @@ if (btndoreport) {
             }, 1500);
 
             // Лог для админа
-            await logAction(myId, "REPORT", `Подал жалобу на ${targetId}: ${reason}`);
+            await logAction(myId, "REPORT", `Подал жалобу на ${targetId}: ${reason}`, "REPORTED");
 
         } catch (e) {
             console.error("Report Error:", e);
@@ -506,7 +506,7 @@ document.getElementById('get-daily').onclick = async () => {
     const userRef = doc(db, "users", myId);
     
     // --- НАСТРОЙКИ ШАНСОВ И МАКСИМУМОВ ---
-    let javschance = 100, bcchance = 1.5, wcchance = 15, blcchance = 30, rcchance = 45, gcchance = 75;
+    let javschance = 100, bcchance = 1, wcchance = 10, blcchance = 20, rcchance = 30, gcchance = 50;
     let mjavs = 50, mbc = 1, mwc = 2, mblc = 5, mrc = 10, mgc = 25;
 
     // ИСПРАВЛЕННЫЕ ССЫЛКИ (теперь совпадают с рынком и базой)
@@ -590,7 +590,7 @@ document.getElementById('get-daily').onclick = async () => {
         }).then(async (resText) => {
             alert("Вы получили: " + resText);
             if (typeof logAction === "function") {
-                await logAction(myId, "GIFT", "Получен бонус: " + resText);
+                await logAction(myId, "GIFT", "Получен бонус: " + resText, "DAILY-AWARD");
             }
         });
 
@@ -695,5 +695,4 @@ document.getElementById('news-next').onclick = () => {
         currentNewsId++;
         displayNews(currentNewsId);
     }
-
 };
