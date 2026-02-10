@@ -1,5 +1,13 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+
+// Берем только то, что нужно для входа и выхода
+import { 
+    getAuth, 
+    onAuthStateChanged, 
+    signOut 
+} from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+
+// Берем всё для работы с базой данных
 import { 
     getFirestore, 
     doc, 
@@ -7,8 +15,8 @@ import {
     collection, 
     query, 
     where, 
-    orderBy, // Добавлено
-    limit,   // Добавлено
+    orderBy, 
+    limit, 
     getDocs, 
     getDoc, 
     runTransaction, 
@@ -17,6 +25,8 @@ import {
     serverTimestamp 
 } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
+// --- КОНФИГУРАЦИЯ ---
+// ... далее твой код без изменений
 // --- КОНФИГУРАЦИЯ ---
 const firebaseConfig = {
     apiKey: "AIzaSyCB6U9js8IMNaQm3cGpR9W-KfJTLVVS85A",
@@ -507,7 +517,7 @@ document.getElementById('get-daily').onclick = async () => {
     
     // --- НАСТРОЙКИ ШАНСОВ И МАКСИМУМОВ ---
     let javschance = 100, bcchance = 1, wcchance = 10, blcchance = 20, rcchance = 30, gcchance = 50;
-    let mjavs = 100, mbc = 2, mwc = 4, mblc = 10, mrc = 20, mgc = 50;
+    let mjavs = 50, mbc = 1, mwc = 2, mblc = 5, mrc = 10, mgc = 25;
 
     // ИСПРАВЛЕННЫЕ ССЫЛКИ (теперь совпадают с рынком и базой)
     const cRefs = {
@@ -695,5 +705,82 @@ document.getElementById('news-next').onclick = () => {
         currentNewsId++;
         displayNews(currentNewsId);
     }
-
 };
+
+
+//Редактирование профиля
+// --- РЕДАКТИРОВАНИЕ ПРОФИЛЯ (УПРОЩЕННОЕ) ---
+let currentUserData = {}; 
+
+const eModal = document.getElementById("editor-modal");
+const btnEditor = document.getElementById("open-editor");
+const closeEditor = document.getElementById("close-editor");
+
+// Открытие модалки
+if (btnEditor) {
+    btnEditor.onclick = async () => {
+        const myId = document.getElementById('view-id').innerText;
+        
+        if (myId === "00000" || !myId) {
+            alert("❌ Ошибка: ID пользователя не определен. Подождите загрузки данных.");
+            return;
+        }
+
+        eModal.style.display = "flex";
+        await load_udata(myId);
+    };
+}
+
+// Закрытие модалки
+if (closeEditor) {
+    closeEditor.onclick = () => {
+        eModal.style.display = "none";
+    };
+}
+
+// Загрузка текущих данных ника
+async function load_udata(myId) {
+    try {
+        const userRef = doc(db, "users", myId);
+        const snap = await getDoc(userRef);
+
+        if (snap.exists()) {
+            currentUserData = snap.data();
+            const inputNick = document.getElementById('edit-nickname-input');
+            if (inputNick) {
+                inputNick.value = currentUserData.nickname || "";
+            }
+        }
+    } catch (e) {
+        console.error("❗ Ошибка загрузки данных:", e);
+    }
+}
+
+// Сохранение НОВОГО НИКА
+const btnSave = document.getElementById("btn-save-settings");
+if (btnSave) {
+    btnSave.onclick = async () => {
+        const new_nickname = document.getElementById("edit-nickname-input").value.trim();
+        const myId = document.getElementById('view-id').innerText;
+        const statusEl = document.getElementById("editor-status");
+
+        try {
+            if (!new_nickname) throw "❗ Ник не может быть пустым!";
+            if (new_nickname.length < 3) throw "❗ Ник слишком короткий!";
+
+            const userRef = doc(db, "users", myId);
+            
+            // Просто обновляем ник в Firestore
+            await updateDoc(userRef, { nickname: new_nickname });
+
+            alert("✅ Ник успешно изменен!");
+            eModal.style.display = "none";
+
+            // Логируем действие для админки
+            await logAction(myId, "EDIT", `Сменил ник на ${new_nickname}`, "PROFILE");
+        } catch (e) {
+            alert(e);
+            if (statusEl) statusEl.innerText = e;
+        }
+    };
+}

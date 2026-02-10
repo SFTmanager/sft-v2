@@ -65,6 +65,7 @@
             <button id="open-report" class="btn-primary" style="background: #f44336; margin-bottom: 10px;">📕Репорт</button>
             <button id="get-daily" class="btn-primary" style="background: #FF9800; margin-bottom: 10px;">🎁Ежедневный подарок</button>
             <button id="open-news" class="btn-primary" style="background: #FF5722; margin-bottom: 10px;">📰Новости</button>
+            <button id = "open-editor" class="btn-primary" style = "background: #4CAF50; margin-bottom: 10px;">🔧Преименовать аккаунт</button>
         </div>
 
         <div id="promo-modal" class="modal-overlay" style="display: none;">
@@ -76,7 +77,6 @@
                 <button id="btn-promo" class="btn-primary" style="background: #9C27B0; margin-top: 10px;">ПОДТВЕРДИТЬ</button>
             </div>
         </div>
-
         <div id="search-modal" class="modal-overlay" style="display: none;">
             <div class="modal-content">
                 <span id="close-search" class="close-btn">&times;</span>
@@ -86,7 +86,6 @@
                 <div id="search-result" style="margin-top: 15px; text-align: left;"></div>
             </div>
         </div>
-
         <div id="report" class="modal-overlay" style="display: none;">
             <div class="modal-content">
                 <span id="close-report" class="close-btn">&times;</span>
@@ -97,7 +96,6 @@
                 <p id="report-status" style="font-size: 11px; margin-top: 10px;"></p>
             </div>
         </div>
-
         <div id="news-modal" class="modal-overlay" style="display: none;">
             <div class="modal-content">
                 <span id="close-news" class="close-btn">&times;</span>
@@ -113,7 +111,19 @@
                 </div>
             </div>
         </div>
-
-    </div> <script type="module" src="main.js"></script>
+        <div id="editor-modal" class="modal-overlay" style="display: none;">
+            <div class="modal-content">
+                <span id="close-editor" class="close-btn">&times;</span>
+                <h3>🔧 Преименовать аккаунт</h3>
+            
+                <p style="font-size: 12px; color: #888; margin-top: 10px;">Новое имя:</p>
+                <input type="text" id="edit-nickname-input" style="text-align: center;" placeholder="Введите никнейм">
+            
+                <button id="btn-save-settings" class="btn-primary" style="background: #4CAF50; margin-top: 15px; color: #fff;"><b>СОХРАНИТЬ ИЗМЕНЕНИЯ</b></button>
+                <p id="editor-status" style="font-size: 11px; margin-top: 10px;"></p>
+            </div>
+        </div>
+    </div> 
+    <script type="module" src="main.js"></script>
 </body>
 </html>
