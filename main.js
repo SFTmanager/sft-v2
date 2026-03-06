@@ -566,30 +566,31 @@ document.getElementById('get-daily').onclick = async () => {
             }
 
             // Вспомогательная функция (внутри транзакции)
+            // Вспомогательная функция (внутри транзакции)
             const processCoin = (key, snap, chance, max, icon, label) => {
                 if (roll(chance)) {
                     const amt = (max === 1) ? 1 : Math.floor(Math.random() * max) + 1;
-                    const fieldName = key + "coins"; // blackcoins, whitecoins...
+                    const fieldName = key === 'blue' ? 'bluecoins' : key + "coins"; // Проверка на blue
                     
                     updates[fieldName] = (userData[fieldName] || 0) + amt;
                     rewardsList.push(`${icon} ${amt} ${label}`);
                     
-                    if (snap.exists()) {
-                        globalUpdates.push({
-                            ref: cRefs[key],
-                            newTotal: (snap.data().total || 0) + amt
-                        });
+                    if (snap && snap.exists()) {
+                        const currentTotal = snap.data().total || 0;
+                        // Обновляем ОБЩЕЕ количество в коллекции currencies прямо здесь
+                        t.update(cRefs[key], { total: currentTotal + amt });
                     }
                 }
             };
 
+            // Вызовы (убедись, что ключи совпадают с cRefs)
             processCoin('black', bSnap, bcchance, mbc, '⚫', 'BlackCoin');
             processCoin('white', wSnap, wcchance, mwc, '⚪', 'WhiteCoins');
-            processCoin('blue', blSnap, blcchance, mblc, '🔵', 'BlueCoins');
+            processCoin('blue', blSnap, blcchance, mblc, '🔵', 'BlueCoins'); // Ключ 'blue'
             processCoin('red', rSnap, rcchance, mrc, '🔴', 'RedCoins');
             processCoin('green', gSnap, gcchance, mgc, '🟢', 'GreenCoins');
 
-            // ШАГ 2: Запись
+            // В конце ШАГА 2 оставляем только обновление юзера
             t.update(userRef, updates);
             globalUpdates.forEach(upd => {
                 t.update(upd.ref, { total: upd.newTotal });
