@@ -785,3 +785,21 @@ if (btnSave) {
         }
     };
 }
+
+//Contacts
+const cModal = document.getElementById("contacts-modal");
+const btnContacts = document.getElementById("open-contacts");
+const closeContacts = document.getElementById("close-contacts");
+
+if (btnContacts) {
+    btnContacts.onclick = async () => {
+        cModal.style.display = "flex";
+    };
+}
+
+// Закрытие модалки
+if (closeContacts) {
+    closeContacts.onclick = () => {
+        cModal.style.display = "none";
+    };
+}
