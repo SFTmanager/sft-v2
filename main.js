@@ -516,7 +516,7 @@ document.getElementById('get-daily').onclick = async () => {
     const userRef = doc(db, "users", myId);
     
     // --- НАСТРОЙКИ ШАНСОВ И МАКСИМУМОВ ---
-    let javschance = 100, bcchance = 1, wcchance = 10, blcchance = 20, rcchance = 30, gcchance = 50;
+    let javschance = 100, bcchance = 2, wcchance = 20, blcchance = 40, rcchance = 60, gcchance = 100;
     let mjavs = 50, mbc = 1, mwc = 2, mblc = 5, mrc = 10, mgc = 25;
 
     // ИСПРАВЛЕННЫЕ ССЫЛКИ (теперь совпадают с рынком и базой)
