@@ -1,7 +1,6 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
 import { getAuth, createUserWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
-// ИСПРАВЛЕНО: Добавлены addDoc, collection, serverTimestamp
-import { getFirestore, doc, setDoc, addDoc, collection, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+import { getFirestore, doc, setDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
 const firebaseConfig = {
     apiKey: "AIzaSyCB6U9js8IMNaQm3cGpR9W-KfJTLVVS85A",
@@ -16,15 +15,21 @@ const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
 
-async function logAction(userId, type, message) {
+async function logAction(userId, type, message, subPath) {
     try {
-        await addDoc(collection(db, "config", "log", "entries"), {
+        const now = new Date();
+        const dateStr = now.toLocaleDateString('ru-RU', { day: '2-digit', month: '2-digit', year: 'numeric' });
+        const timeStr = now.toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+
+        const customId = `${timeStr}; ${dateStr} [${userId}]`;
+
+        await setDoc(doc(db, "config", "log", subPath, customId), {
             userId: userId,
             type: type,
             msg: message,
             time: serverTimestamp()
         });
-    } catch (e) { console.error("Ошибка лога:", e); }
+    } catch (e) { console.error("❗Ошибка записи лога:", e); }
 }
 
 document.getElementById('btn-do-register').onclick = async () => {
@@ -50,10 +55,15 @@ document.getElementById('btn-do-register').onclick = async () => {
             regIP: userIP,
             lastIP: userIP,
             is_banned: false,
-            blackcoins: 0, whitecoins: 0, greencoins: 0, redcoins: 0, bluecoins: 0
+            blackcoins: 0, whitecoins: 0, greencoins: 0, redcoins: 0, bluecoins: 0,
+            pstatus: "DEFAULT",
+            votedBy: [], // Сразу создаем пустой массив для рейтинга
+            rating: 0
         });
 
-        await logAction(genId, "REGISTRATION", `Новый игрок. IP: ${userIP}`);
+        // Логируем в папку registration
+        await logAction(genId, "REGISTRATION", `Новый игрок. IP: ${userIP}`, "registration");
+        
         window.location.href = 'main.html';
     } catch (e) { 
         console.error(e);

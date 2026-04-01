@@ -1,13 +1,11 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
 
-// Берем только то, что нужно для входа и выхода
 import { 
     getAuth, 
     onAuthStateChanged, 
     signOut 
 } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 
-// Берем всё для работы с базой данных
 import { 
     getFirestore, 
     doc, 
@@ -22,11 +20,12 @@ import {
     runTransaction, 
     updateDoc, 
     addDoc, 
-    serverTimestamp 
+    setDoc,           // Добавили сюда
+    serverTimestamp,  // Он уже тут есть
+    increment,
+    arrayUnion
 } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
-// --- КОНФИГУРАЦИЯ ---
-// ... далее твой код без изменений
 // --- КОНФИГУРАЦИЯ ---
 const firebaseConfig = {
     apiKey: "AIzaSyCB6U9js8IMNaQm3cGpR9W-KfJTLVVS85A",
@@ -44,15 +43,30 @@ const db = getFirestore(app);
 const COIN_ORDER = ['blackcoins', 'whitecoins', 'bluecoins', 'redcoins', 'greencoins'];
 
 // --- УНИВЕРСАЛЬНАЯ ФУНКЦИЯ ЛОГА ---
+// ВНИМАНИЕ: Импорт отсюда УДАЛЕН, так как всё уже импортировано сверху!
+
 async function logAction(userId, type, message, path) {
     try {
-        await addDoc(collection(db, "config", "log", path), {
+        const now = new Date();
+        const dateStr = now.toLocaleDateString('ru-RU', { 
+            day: '2-digit', month: '2-digit', year: 'numeric' 
+        });
+        const timeStr = now.toLocaleTimeString('ru-RU', { 
+            hour: '2-digit', minute: '2-digit', second: '2-digit' 
+        });
+
+        const customId = `${timeStr}; ${dateStr} [${userId}]`;
+
+        await setDoc(doc(db, "config", "log", path, customId), {
             userId: userId,
             type: type,
             msg: message,
-            time: serverTimestamp()
+            time: serverTimestamp() 
         });
-    } catch (e) { console.error("❗Ошибка записи лога:", e); }
+
+    } catch (e) { 
+        console.error("❗Ошибка записи лога:", e); 
+    }
 }
 
 // --- ПРОВЕРКА АВТОРИЗАЦИИ И БАНОВ ---
@@ -103,14 +117,52 @@ onAuthStateChanged(auth, async (user) => {
             onSnapshot(userRef, (doc) => {
                 const d = doc.data();
                 if (!d) return;
-
+                
                 const nickEl = document.getElementById('view-nick');
                 const idEl = document.getElementById('view-id');
                 const javsEl = document.getElementById('view-javs');
+                const descEl = document.getElementById('view-description');
+                const statusEl = document.getElementById('status');
+                const tags = document.getElementById('tags');
+                if (!d.tags) {
+                    console.log("🏆 Инициализация списка достижений...");
+                    updateDoc(userRef, { tags: [] }); 
+                    // Мы записываем пустой массив, чтобы в следующий раз ошибки не было
+                }
+                if (statusEl) {
+                    if (d.pstatus){
+                        const displayStatus = d.pstatus || "DEFAULT"; 
+                        statusEl.innerText = "Status: " + displayStatus;
+                    }
+                    else {
+                        updateDoc(userRef, { pstatus: "DEFAULT" });
+                    }
+                }
+                if (tags && d.tags) {
+                    // 1. Очищаем контейнер, чтобы теги не дублировались при обновлении
+                    tags.innerHTML = ""; 
 
+                    // 2. Используем for...of — это современнее и читабельнее
+                    for (const tagText of d.tags) {
+                        const element = document.createElement("p");
+                        
+                        // Используй textContent вместо innerHTML, если в тегах только текст
+                        // Это защитит от XSS (если кто-то впишет <script> в тег)
+                        element.textContent = tagText; 
+                        
+                        // Можно сразу добавить стиль или класс
+                        element.style.margin = "5px 0";
+                        element.className = "c-green"; 
+
+                        tags.appendChild(element);
+                    }
+                }
+                if (descEl) descEl.innerText = d.description || "Нет описания";
                 if (nickEl) nickEl.innerText = d.nickname;
                 if (idEl) idEl.innerText = d.id;
                 if (javsEl) javsEl.innerText = Math.floor(d.javs);
+                
+                
 
                 COIN_ORDER.forEach(id => {
                     const shortId = id.replace('coins', '');
@@ -408,41 +460,134 @@ if (btnDoSearch) {
     btnDoSearch.onclick = async () => {
         const sid = document.getElementById('search-id-input').value.trim();
         
-        if (!sid) return alert("🧿Введите ID для поиска");
+        if (!sid) return alert("🧿 Введите ID для поиска");
 
-        searchResult.innerHTML = "<p style='color: #888; text-align: center;'>Запрос к базе данных...</p>";
+        searchResult.innerHTML = "<p style='color: #888; text-align: center; font-family: monospace;'>ACCESSING DATABASE...</p>";
 
         try {
-            // Ищем документ в коллекции users, где ID документа — это наш номер
             const userRef = doc(db, "users", sid);
             const snap = await getDoc(userRef);
 
             if (snap.exists()) {
                 const d = snap.data();
-                // Формируем красивую карточку результата
+                
+                // 1. Готовим список достижений/тегов заранее
+                // Если полей нет в базе, используем пустой массив, чтобы .map не выдал ошибку
+                const allTags = d.tags || [];
+                const rating = d.rating || 0;
+                let colorrating = 0;
+                if (rating < 0){
+                    colorrating = "#FF0000";
+                }
+                else if (rating > 0){
+                    colorrating = "#00FF00";
+                }
+                else {
+                    colorrating = "#FFFFFF";
+                }
+                const tagsHTML = allTags.length > 0 
+                    ? allTags.map(t => `<span style="display:inline-block; background:#222; border:1px solid #444; padding:2px 8px; border-radius:10px; margin:2px; font-size:10px; color:#4CAF50;">${t}</span>`).join('')
+                    : "<span style='color:#555; font-size:11px;'>Тегов нет</span>";
+                
+                // 2. Отрисовываем всю карточку
                 searchResult.innerHTML = `
-                    <div style="background: #1a1a1a; padding: 15px; border-radius: 12px; border: 1px solid #333; animation: fadeIn 0.3s;">
-                        <div style="display: flex; justify-content: space-between; align-items: center;">
-                            <b style="color: #2196f3; font-size: 18px;">🪪${d.nickname}</b>
-                            <span style="color: #555; font-size: 12px;">🪪 #${sid}</span>
+                    <div style="background: #111; padding: 20px; border-radius: 15px; border: 1px solid #333; box-shadow: 0 10px 30px rgba(0,0,0,0.7); text-align: center; color: #fff;">
+                        
+                        <div style="margin-bottom: 15px;">
+                            <div style="font-size: 9px; color: #555; letter-spacing: 2px; margin-bottom: 5px; text-transform: uppercase;">SFT Profile System</div>
+                            <b style="font-size: 24px; color: #fff;">${d.nickname || "Unknown"}</b>
+                            <div style="color: #444; font-size: 11px; font-family: monospace; margin-top: 4px;">#${sid}</div>
                         </div>
-                        <hr style="border: 0; border-top: 1px solid #222; margin: 10px 0;">
-                        <p style="margin: 5px 0; color: #4CAF50;"><b>Баланс:</b> 🔹${Math.floor(d.javs)} JAVS</p>
-                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 5px; font-size: 11px; color: #888;">
-                            <span>Black: ⚫${d.blackcoins || 0}</span>
-                            <span>White: ⚪${d.whitecoins || 0}</span>
-                            <span>Blue: 🔵${d.bluecoins || 0}</span>
-                            <span>Red: 🔴${d.redcoins || 0}</span>
-                            <span>Green: 🟢${d.greencoins || 0}</span>
+
+                        <div style="margin-bottom: 15px;">
+                            <span style="font-size: 11px; font-weight: bold; padding: 3px 12px; border-radius: 20px; border: 1px solid #2196f3; color: #2196f3; text-transform: uppercase;">
+                                ${d.pstatus || "DEFAULT"}
+                            </span>
+                        </div>
+
+                        <div style="background: #1a1a1a; padding: 12px; border-radius: 10px; margin-bottom: 20px; border-left: 4px solid #2196f3;">
+                            <p style="margin: 0; color: #ccc; font-size: 13px; font-style: italic; line-height: 1.4;">
+                                "${d.description || "Описание отсутствует"}"
+                            </p>
+                        </div>
+
+                        <div style="margin-bottom: 20px; background: rgba(76, 175, 80, 0.05); padding: 10px; border-radius: 10px;">
+                            <div style="color: #4CAF50; font-size: 22px; font-weight: bold;">${Math.floor(d.javs || 0)} <span style="font-size: 12px;">JAVS</span></div>
+                            <div style="display: flex; justify-content: center; gap: 15px; margin-top: 10px; font-size: 11px; color: #888;">
+                                <span>⚫ ${d.blackcoins || 0}</span>
+                                <span>⚪ ${d.whitecoins || 0}</span>
+                                <span>🔵 ${d.bluecoins || 0}</span>
+                            </div>
+                        </div>
+
+                        <details style="background: #0a0a0a; border-radius: 8px; border: 1px solid #222; overflow: hidden;">
+                            <summary style="padding: 10px; cursor: pointer; color: #666; font-size: 12px; user-select: none; outline: none;">
+                                Теги/Достижения SFT
+                            </summary>
+                            <div style="padding: 15px; text-align: left; border-top: 1px solid #222;">
+                                <div style="margin-bottom: 10px;">
+                                    ${tagsHTML}
+                                </div>
+                            </div>
+                        </details>
+                        <div>
+                            <p class = "c-white">Рейтинг: <h3 style = "color: ${colorrating}">${rating}</h3></p>
+                            <div style = "display: flex; flex-direction: row;">
+                                <button class = 'btn-primary'>
+                                    <img src = "imgs/thumbs-up.png">
+                                </button>
+                                <button class = 'btn-primary' style = 'background-color: red;'>
+                                    <img src = "imgs/thumbs-down.png">
+                                </button>
+                            </div>
                         </div>
                     </div>
                 `;
+                const upBtn = searchResult.querySelector('.btn-primary:not([style*="background-color: red"])');
+                const downBtn = searchResult.querySelector('.btn-primary[style*="background-color: red"]');
+
+                if (upBtn && downBtn) {
+                    // Функция для голосования
+                    const handleVote = async (isPositive) => {
+                        const currentUser = auth.currentUser; // Получаем текущего авторизованного юзера
+                        if (!currentUser) return alert("❌ Войдите в аккаунт, чтобы голосовать");
+                        if (currentUser.uid === sid) return alert("⛔ Нельзя голосовать за самого себя!");
+
+                        try {
+                            const targetUserRef = doc(db, "users", sid);
+                            const targetSnap = await getDoc(targetUserRef);
+                            const targetData = targetSnap.data();
+                            
+                            const voters = targetData.votedBy || [];
+
+                            if (voters.includes(currentUser.uid)) {
+                                return alert("🚫 Вы уже голосовали за этого пользователя");
+                            }
+
+                            // Обновляем рейтинг и добавляем ID в список проголосовавших
+                            await updateDoc(targetUserRef, {
+                                rating: increment(isPositive ? 1 : -1),
+                                votedBy: arrayUnion(currentUser.uid)
+                            });
+
+                            alert("✅ Голос учтен!");
+                            btnDoSearch.onclick(); // Перезапускаем поиск, чтобы обновить цифру на экране
+                            
+                        } catch (err) {
+                            console.error("Vote error:", err);
+                            alert("❗ Ошибка при голосовании");
+                        }
+                    };
+
+                    upBtn.onclick = () => handleVote(true);
+                    downBtn.onclick = () => handleVote(false);
+                }
             } else {
-                searchResult.innerHTML = "<p style='color: #ff5252; text-align: center;'>❗Пользователь не найден</p>";
+                searchResult.innerHTML = "<div style='color: #ff5252; text-align: center; background: rgba(255,82,82,0.1); padding: 15px; border-radius: 10px;'>❗ ОШИБКА: Пользователь не найден</div>";
             }
         } catch (e) {
             console.error("Search Error:", e);
-            searchResult.innerHTML = "<p style='color: red; text-align: center;'>❗Ошибка доступа к данным</p>";
+            searchResult.innerHTML = "<p style='color: red; text-align: center;'>❗ ОШИБКА ПОДКЛЮЧЕНИЯ К БД</p>";
         }
     };
 }
@@ -516,7 +661,7 @@ document.getElementById('get-daily').onclick = async () => {
     const userRef = doc(db, "users", myId);
     
     // --- НАСТРОЙКИ ШАНСОВ И МАКСИМУМОВ ---
-    let javschance = 100, bcchance = 2, wcchance = 20, blcchance = 40, rcchance = 60, gcchance = 100;
+    let javschance = 100, bcchance = 1, wcchance = 10, blcchance = 20, rcchance = 30, gcchance = 50;
     let mjavs = 50, mbc = 1, mwc = 2, mblc = 5, mrc = 10, mgc = 25;
 
     // ИСПРАВЛЕННЫЕ ССЫЛКИ (теперь совпадают с рынком и базой)
@@ -801,5 +946,72 @@ if (btnContacts) {
 if (closeContacts) {
     closeContacts.onclick = () => {
         cModal.style.display = "none";
+    };
+}
+
+
+// --- ОБНОВЛЕНИЕ ОПИСАНИЯ ---
+const dModal = document.getElementById("description-modal");
+const btnDescription = document.getElementById("edit-description");
+const closeDescription = document.getElementById("close-description");
+const btnDescSave = document.getElementById("submit-description");
+const inputDescription = document.getElementById("input-description");
+
+// Открытие модалки и загрузка данных
+if (btnDescription) {
+    btnDescription.onclick = async () => {
+        const ID = document.getElementById("view-id").innerText;
+        dModal.style.display = "flex";
+        
+        // Сразу подгружаем текущее описание в поле ввода
+        try {
+            const userRef = doc(db, "users", ID);
+            const snap = await getDoc(userRef);
+            if (snap.exists()) {
+                const data = snap.data();
+                if (inputDescription) {
+                    inputDescription.value = data.description || "";
+                }
+            }
+        } catch (e) {
+            console.error("Ошибка загрузки описания:", e);
+        }
+    };
+}
+
+// Закрытие
+if (closeDescription) {
+    closeDescription.onclick = () => {
+        dModal.style.display = "none";
+    };
+}
+
+// Сохранение
+if (btnDescSave) {
+    btnDescSave.onclick = async () => {
+        const new_description = inputDescription.value.trim();
+        const ID = document.getElementById("view-id").innerText;
+        
+        if (ID === "00000") return;
+
+        try {
+            const userRef = doc(db, "users", ID);
+            await updateDoc(userRef, { description: new_description });
+            
+            alert("✅ Описание успешно изменено!");
+            dModal.style.display = "none";
+            
+            // Логируем
+            await logAction(ID, "EDIT", `Сменил описание на: ${new_description}`, "PROFILE");
+            
+            // Чтобы увидеть результат без перезагрузки, можно обновить текст на странице, 
+            // если у тебя есть элемент для этого (например, view-description)
+            const viewDesc = document.getElementById('view-description');
+            if (viewDesc) viewDesc.innerText = new_description;
+
+        } catch (e) {
+            console.error("Ошибка сохранения:", e);
+            alert("❌ Ошибка при сохранении");
+        }
     };
 }

@@ -1,7 +1,6 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
 import { getAuth, signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
-// ИСПРАВЛЕНО: Добавлены addDoc, collection, serverTimestamp
-import { getFirestore, doc, updateDoc, collection, query, where, getDocs, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+import { getFirestore, doc, updateDoc, collection, query, where, getDocs, setDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
 const firebaseConfig = {
     apiKey: "AIzaSyCB6U9js8IMNaQm3cGpR9W-KfJTLVVS85A",
@@ -16,15 +15,23 @@ const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
 
-async function logAction(userId, type, message) {
+// Чистая функция логирования
+async function logAction(userId, type, message, subPath) {
     try {
-        await addDoc(collection(db, "config", "log", "entries"), {
+        const now = new Date();
+        const dateStr = now.toLocaleDateString('ru-RU', { day: '2-digit', month: '2-digit', year: 'numeric' });
+        const timeStr = now.toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+
+        // Формат ID: "18:05:30; 29.03.2026 [ID]"
+        const customId = `${timeStr}; ${dateStr} [${userId}]`;
+
+        await setDoc(doc(db, "config", "log", subPath, customId), {
             userId: userId,
             type: type,
             msg: message,
             time: serverTimestamp()
         });
-    } catch (e) { console.error("Ошибка лога:", e); }
+    } catch (e) { console.error("❗Ошибка записи лога:", e); }
 }
 
 document.getElementById('btn-do-login').onclick = async () => {
@@ -46,15 +53,15 @@ document.getElementById('btn-do-login').onclick = async () => {
         if (!snap.empty) {
             const userDocRef = snap.docs[0].ref;
             const userData = snap.docs[0].data();
-            // Обновляем IP
+            
             await updateDoc(userDocRef, { lastIP: currentIP });
-            // Логируем вход
-            await logAction(userData.id, "LOGIN", `Вход выполнен. IP: ${currentIP}`);
+            // Логируем в папку entries
+            await logAction(userData.id, "LOGIN", `Вход выполнен. IP: ${currentIP}`, "entries");
         }
 
         window.location.href = 'main.html'; 
     } catch (e) { 
         console.error(e);
-        alert("Ошибка входа: проверьте ник и пароль. Подробности в консоли."); 
+        alert("Ошибка входа: проверьте ник и пароль."); 
     }
 };
