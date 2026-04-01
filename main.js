@@ -517,6 +517,8 @@ if (btnDoSearch) {
                                 <span>⚫ ${d.blackcoins || 0}</span>
                                 <span>⚪ ${d.whitecoins || 0}</span>
                                 <span>🔵 ${d.bluecoins || 0}</span>
+                                <span>🔴 ${d.redcoins || 0}</span>
+                                <span>🟢 ${d.greencoins || 0}</span>
                             </div>
                         </div>
 
